@@ -86,4 +86,4 @@ if(url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
         }
 ```
 
-[参考博客](https://www.crifan.com/access_https_type_url_in_csharp/)
+[参考博客地址（传送）](https://www.crifan.com/access_https_type_url_in_csharp/)
