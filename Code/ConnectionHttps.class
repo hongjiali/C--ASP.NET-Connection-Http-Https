@@ -1,0 +1,105 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Runtime.Serialization.Json;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Web;
+using System.Net.Security;
+
+namespace Demo.Models
+{
+    public class ConnectionHttps
+    {
+    //request https link
+        private string m_host = "https://uc.---";
+    
+    //if link is https, must use the method
+        private bool CheckValidationResult(object sender,
+        X509Certificate certificate, X509Chain chain, SslPolicyErrors errors)
+        {
+            return true;// Always accept
+        }
+
+
+        private SAES_M_comChatResult GetResult(string url)
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+            request.Method = "GET";
+
+            if (url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
+            {
+                ServicePointManager.ServerCertificateValidationCallback =
+                    new RemoteCertificateValidationCallback(CheckValidationResult);
+            }
+
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+
+            // Get the stream associated with the response.
+            Stream receiveStream = response.GetResponseStream();
+
+            // Pipes the stream to a higher level stream reader with the required encoding format. 
+            StreamReader readStream = new StreamReader(receiveStream, Encoding.UTF8);
+            string received = readStream.ReadToEnd();
+            // Console.WriteLine("Response stream received.");
+            //  Console.WriteLine (readStream.ReadToEnd ());
+            //  Response.Write("<script>window.alert('" + readStream.ReadToEnd() + "');</script>");
+            response.Close();
+            readStream.Close();
+
+            if (received == null && received == "") return null;
+
+            ConnectionHttpsResult result = null;
+            using (var ms = new MemoryStream(Encoding.Unicode.GetBytes(received)))
+            {
+                DataContractJsonSerializer deseralizer = new DataContractJsonSerializer(typeof(SAES_M_comChatResult));
+                result = (ConnectionHttpsResult)deseralizer.ReadObject(ms);//反序列化ReadObject
+            }
+
+            return result;
+        }
+
+        public string GetUserID(string token)
+        {
+            try
+            {
+                string userId = "";
+                if (token == null || token == "") return userId;
+                string urlStr = m_host + "?access_token=" + token;
+                SAES_M_comChatResult result = GetResult(urlStr);
+
+                if(result.resultCode == 1)
+                {
+                    return result.data.employee_id;
+                }
+                return userId;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.Write(ex);
+                return "";
+            }
+        }
+    }
+
+    public class ConnectionHttpsUserInfoResult
+    {
+        public string appId { get; set; }
+        public string mail { get; set; }
+        public string dept { get; set; }
+        public string employee_id { get; set; }
+        public string ext { get; set; }
+        public string name { get; set; }
+        public string title { get; set; }
+    }
+    
+
+    public class ConnectionHttpsResult
+    {
+        public int resultCode { get; set; }
+        public ConnectionHttpsUserInfoResult data { get; set; }
+    }
+   
+}
