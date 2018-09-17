@@ -1,0 +1,77 @@
+public class ConnectionHttp
+    {
+        private string m_host = "https://uc.sae.tdk.com:8092/user/get";
+      
+        private ConnectionHttpResult GetResult(string url)
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+            request.Method = "GET";
+
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+
+            // Get the stream associated with the response.
+            Stream receiveStream = response.GetResponseStream();
+
+            // Pipes the stream to a higher level stream reader with the required encoding format. 
+            StreamReader readStream = new StreamReader(receiveStream, Encoding.UTF8);
+            string received = readStream.ReadToEnd();
+            // Console.WriteLine("Response stream received.");
+            //  Console.WriteLine (readStream.ReadToEnd ());
+            //  Response.Write("<script>window.alert('" + readStream.ReadToEnd() + "');</script>");
+            response.Close();
+            readStream.Close();
+
+            if (received == null && received == "") return null;
+
+            ConnectionHttpResult result = null;
+            using (var ms = new MemoryStream(Encoding.Unicode.GetBytes(received)))
+            {
+                DataContractJsonSerializer deseralizer = new DataContractJsonSerializer(typeof(SAES_M_comChatResult));
+                result = (SAES_M_comChatResult)deseralizer.ReadObject(ms);//反序列化ReadObject
+            }
+
+            return result;
+        }
+
+        public string GetUserID(string token)
+        {
+            try
+            {
+                string userId = "";
+                if (token == null || token == "") return userId;
+                string urlStr = m_host + "?access_token=" + token;
+                //string urlStr = m_host + "?appkey=" + m_appkey + "&secretkey=" + m_secretkey + "&access_token=" + token;
+                SAES_M_comChatResult result = GetResult(urlStr);
+
+                if(result.resultCode == 1)
+                {
+                    return result.data.employee_id;
+                }
+                return userId;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.Write(ex);
+                return "";
+            }
+        }
+    }
+
+    //Entity
+    public class ConnectionHttpUserInfoResult
+    {
+        public string appId { get; set; }
+        public string mail { get; set; }
+        public string dept { get; set; }
+        public string employee_id { get; set; }
+        public string ext { get; set; }
+        public string name { get; set; }
+        public string title { get; set; }
+    }
+    
+
+    public class ConnectionHttpResult
+    {
+        public int resultCode { get; set; }
+        public ConnectionHttpUserInfoResult data { get; set; }
+    }
