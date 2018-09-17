@@ -1,6 +1,8 @@
 public class ConnectionHttp
     {
-        private string m_host = "https://uc.sae.tdk.com:8092/user/get";
+        private string m_host = "http://10.10.240.32/api/user/get";
+        private string m_appkey = "b1c3e9c71bf266fb0bfc95d2cc6280c9";
+        private string m_secretkey = "5f2b6905ce7b8a6cfc819be90ec61f2b";
       
         private ConnectionHttpResult GetResult(string url)
         {
@@ -27,7 +29,7 @@ public class ConnectionHttp
             using (var ms = new MemoryStream(Encoding.Unicode.GetBytes(received)))
             {
                 DataContractJsonSerializer deseralizer = new DataContractJsonSerializer(typeof(SAES_M_comChatResult));
-                result = (SAES_M_comChatResult)deseralizer.ReadObject(ms);//反序列化ReadObject
+                result = (ConnectionHttpResult)deseralizer.ReadObject(ms);//反序列化ReadObject
             }
 
             return result;
@@ -41,7 +43,7 @@ public class ConnectionHttp
                 if (token == null || token == "") return userId;
                 string urlStr = m_host + "?access_token=" + token;
                 //string urlStr = m_host + "?appkey=" + m_appkey + "&secretkey=" + m_secretkey + "&access_token=" + token;
-                SAES_M_comChatResult result = GetResult(urlStr);
+                ConnectionHttpResult result = GetResult(urlStr);
 
                 if(result.resultCode == 1)
                 {
@@ -60,13 +62,11 @@ public class ConnectionHttp
     //Entity
     public class ConnectionHttpUserInfoResult
     {
-        public string appId { get; set; }
-        public string mail { get; set; }
-        public string dept { get; set; }
-        public string employee_id { get; set; }
-        public string ext { get; set; }
-        public string name { get; set; }
-        public string title { get; set; }
+        public string dept { get; set; }//所在部门
+        public string employee_id { get; set; }//工号
+        public string locus { get; set; }//所在厂区
+        public string nickname { get; set; }//名字
+        public string telephone { get; set; }//电话号码
     }
     
 
